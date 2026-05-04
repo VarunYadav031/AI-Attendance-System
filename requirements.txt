@@ -1,0 +1,15 @@
+# numynuse beacause it is a fundamental package for scientific computing in Python, providing support for arrays, matrices, and a wide range of mathematical functions.
+numpy
+pandas       
+#  pip install -r ek Python command hai jo ek file me likhe hue saare dependencies (packages) ko ek saath install karta hai.
+scikit-learn  
+#  //ye machine learning ke liye ek popular library hai jo classification, regression, clustering, aur dimensionality reduction jaise algorithms provide karti hai.
+dlib-bin
+# //dlib ek C++ library hai jo machine learning aur computer vision ke liye use hoti hai, aur dlib-bindings Python ke liye uske bindings provide karti hai.
+git+https://github.com/ageitgey/face_recognition_models
+setuptools
+supabase
+bcrypt
+segno
+pillow
+streamlit
