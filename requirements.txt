@@ -14,3 +14,11 @@ segno
 pillow
 streamlit
 # ctest change
+ #dlib
+ face-recognition-models
+scikit-learn
+
+ face-recognition
+
+ librosa
+ resemblyzer

@@ -27,6 +27,7 @@ def style_background_dashboard():
                     """
             ,unsafe_allow_html=True)
 def style_base_layout():
+
     st.markdown("""
         <style>
             @import url('https://fonts.googleapis.com/css2?family=Climate+Crisis:YEAR@1979&display=swap');
@@ -40,7 +41,7 @@ def style_base_layout():
             .block-container {
                 padding-top: 1.5rem; !important;
                
-            }
+            # }
             h1{
                font-family: 'Climate Crisis', sans-serif !important;
                 font-size: 2rem !important;
