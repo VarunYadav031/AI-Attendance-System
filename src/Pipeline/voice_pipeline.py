@@ -31,38 +31,57 @@ def get_voice_embedding(audio_bytes):
         return None
 
 
-def identify_speaker(new_embedding, candidate_dict, threshold=0.65):
-
+def identify_speaker(
+    new_embedding,
+    candidate_dict,
+    threshold=0.65
+):
     if new_embedding is None or not candidate_dict:
         return None, 0.0
 
-    new_embedding = np.array(new_embedding)
+    new_embedding = np.array(
+        new_embedding,
+        dtype=np.float32
+    )
+
+    new_norm = np.linalg.norm(new_embedding)
+
+    if new_norm == 0:
+        return None, 0.0
 
     best_sid = None
     best_score = -1.0
 
     for sid, stored_embedding in candidate_dict.items():
 
-        if stored_embedding is not None:
+        if stored_embedding is None:
+            continue
 
-            stored_embedding = np.array(stored_embedding)
+        stored_embedding = np.array(
+            stored_embedding,
+            dtype=np.float32
+        )
 
-            similarity = np.dot(
-                new_embedding,
-                stored_embedding
-            ) / (
-                np.linalg.norm(new_embedding)
-                * np.linalg.norm(stored_embedding)
-            )
+        stored_norm = np.linalg.norm(stored_embedding)
 
-            if similarity > best_score:
-                best_score = similarity
-                best_sid = sid
+        if stored_norm == 0:
+            continue
+
+        similarity = np.dot(
+            new_embedding,
+            stored_embedding
+        ) / (
+            new_norm * stored_norm
+        )
+
+        if similarity > best_score:
+            best_score = similarity
+            best_sid = sid
 
     if best_score >= threshold:
-        return best_sid, best_score
+        return best_sid, float(best_score)
 
-    return None, best_score
+    return None, float(best_score)
 
 
 def process_bulk_audio(
@@ -70,9 +89,7 @@ def process_bulk_audio(
     candidate_dict,
     threshold=0.65
 ):
-
     try:
-
         encoder = load_voice_encoder()
 
         audio, sr = librosa.load(
@@ -116,9 +133,7 @@ def process_bulk_audio(
         return identified_results
 
     except Exception as e:
-
         st.error(
             f"Bulk voice recognition error: {e}"
         )
-
         return {}

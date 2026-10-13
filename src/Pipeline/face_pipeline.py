@@ -1,9 +1,10 @@
 import dlib 
 import numpy as np
 import face_recognition_models
-from sklearn.svm import SVC
+# from sklearn.svm import SVC
 import streamlit as st
-from src.Database.db import get_all_students
+from src.Database.db import get_all_students, create_student
+
 
 @st.cache_resource
 def load_dlib_models():
@@ -22,14 +23,18 @@ def load_dlib_models():
 
 def get_face_embedding(image_np):
     detector, sp, face_recognition = load_dlib_models()
+
     faces = detector(image_np, 1)
     encodings = []
 
     for face in faces:
         shape = sp(image_np, face)
+
         face_descriptor = face_recognition.compute_face_descriptor(
-            image_np, shape, 1
-        )  # 128 embeddings
+            image_np,
+            shape,
+            1
+        )
 
         encodings.append(np.array(face_descriptor))
 
@@ -38,6 +43,7 @@ def get_face_embedding(image_np):
 
 @st.cache_resource
 def get_trained_model():
+    from sklearn.svm import SVC
     X = []
     y = []
 
@@ -47,14 +53,29 @@ def get_trained_model():
         return None
 
     for student in students_db:
-        embeddings = student.get('face_embeddings')
+
+        embeddings = student.get('face_embedding')
 
         if embeddings:
-            X.append(np.array(embeddings))
-            y.append(student.get('student_id'))
+
+            embedding = np.array(
+                embeddings,
+                dtype=np.float64
+            ).flatten()
+
+            if len(embedding) == 128:
+                X.append(embedding)
+                y.append(student.get('student_id'))
 
     if len(X) == 0:
         return None
+
+    if len(set(y)) < 2:
+        return {
+            'clf': None,
+            'X': X,
+            'y': y
+        }
 
     clf = SVC(
         kernel='linear',
@@ -67,17 +88,24 @@ def get_trained_model():
     except ValueError:
         return None
 
-    return {'clf': clf, 'X': X, 'y': y}
+    return {
+        'clf': clf,
+        'X': X,
+        'y': y
+    }
 
 
 def train_classifier():
     st.cache_resource.clear()
+
     model_data = get_trained_model()
+
     return bool(model_data)
 
 
 def predict_attendance(image_np):
     encodings = get_face_embedding(image_np)
+
     detected_students = {}
 
     model_data = get_trained_model()
@@ -92,16 +120,43 @@ def predict_attendance(image_np):
     all_students = sorted(list(set(y_train)))
 
     for encoding in encodings:
-        if len(all_students) >= 2:
-            predicted_id = int(clf.predict([encoding])[0])
+
+        encoding = np.array(
+            encoding,
+            dtype=np.float64
+        ).flatten()
+
+        if len(all_students) == 1:
+
+            predicted_id = all_students[0]
+
         else:
-            predicted_id = int(all_students[0])
 
-        student_embeddings = X_train[y_train.index(predicted_id)]
+            predicted_id = clf.predict([encoding])[0]
 
-        best_match_score = np.linalg.norm(
-            student_embeddings - encoding
-        )
+        predicted_id = int(predicted_id)
+
+        student_indexes = [
+            i
+            for i, sid in enumerate(y_train)
+            if sid == predicted_id
+        ]
+
+        best_match_score = float('inf')
+
+        for index in student_indexes:
+
+            student_embedding = np.array(
+                X_train[index],
+                dtype=np.float64
+            ).flatten()
+
+            distance = np.linalg.norm(
+                student_embedding - encoding
+            )
+
+            if distance < best_match_score:
+                best_match_score = distance
 
         resemblance_threshold = 0.6
 

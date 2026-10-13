@@ -1,3 +1,5 @@
+streamlit
+
 # numynuse beacause it is a fundamental package for scientific computing in Python, providing support for arrays, matrices, and a wide range of mathematical functions.
 numpy
 pandas       
@@ -9,10 +11,13 @@ dlib-bin
 git+https://github.com/ageitgey/face_recognition_models
 setuptools
 supabase
+
+
+
 bcrypt
 segno
 pillow
-streamlit
+
 # ctest change
  #dlib
  face-recognition-models
